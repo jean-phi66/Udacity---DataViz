@@ -1,0 +1,231 @@
+<style>
+#sliderContainer {
+   position: absolute;
+   top: 340px;
+   left: 600px;
+}
+#dateContainer {
+   position: absolute;
+   top: 240px;
+   left: 600px;
+}
+</style>
+
+<script src="http://d3js.org/d3.v4.min.js"></script>
+<script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+<html>
+<div id="dateContainer">
+<script type="text/javascript">
+  var date_svg = dimple.newSvg("#dateContainer", 100, 100);
+  date_svg.append("text")
+    .attr("id", "current_month")
+    .attr("x", 50)
+    .attr("y", 90)
+    .style("text-anchor", "left")
+    .style("font-family", "sans-serif")
+    .style("font-size", 14)
+    .attr("color", "black")
+    .text("2000-01")
+
+</script>
+</div>
+<div id="sliderContainer">
+  <script type="text/javascript">
+  var slider_svg = dimple.newSvg("#sliderContainer", 10, 10);
+  // data feed
+  d3.csv("flights_per_month_stacked.csv", function (data) {
+    var month_ids = dimple.getUniqueValues(data, "Month_id");
+    var slider = d3.select("#sliderContainer").append("input")
+            .attr("type", "range")
+            .attr("style", "-webkit-appearance: slider-vertical" )
+            .attr("min", 0)
+            .attr("max", month_ids.length - 1)
+            .attr("value", 0)
+            .attr("id", "year_svg")
+            });
+  </script>
+
+
+</div>
+<div id="chartContainer">
+  <script type="text/javascript">
+    var svg = dimple.newSvg("#chartContainer", 700, 500);
+
+    // title
+    var headline = "Impact of 9/11 on US Air traffic - Plot up to "
+    // add data source reference
+    svg.append("text")
+      .attr("x", 10)
+      .attr("y", 480)
+      .style("text-anchor", "left")
+      .style("font-family", "sans-serif")
+      .style("font-size", 10)
+      .text("Data source : http://stat-computing.org/dataexpo/2009/the-data.html")
+
+    // data feed
+    d3.csv("flights_per_month_stacked.csv", function (data) {
+    // initialise past_data
+    var past_data = data
+
+    // Define main chart
+    var bar_chart = new dimple.chart(svg, data);
+
+    // get series for interactive visualisation indexing
+    var origins = dimple.getUniqueValues(data, "Origin");
+    var month_ids = dimple.getUniqueValues(data, "Month_id");
+    up_to_month = month_ids[0]
+    var init_year = up_to_month
+    // insert title and explanation
+    d3.select("body").insert("h2", ":first-child").text(headline + up_to_month);
+    var comment=["This graph displays the evolution of Air traffic (number of departures) for the 5 most important US airports.",
+                "since January 2001. One can see clearly a drop linked to the 9/11 attacks and the recovery that took place",
+                " during the two following years."]
+    svg.selectAll("explanatory_text")
+            .data(comment)
+            .enter()
+            .append("text")
+              .attr("x", 20)
+              .attr("y", function(d, i) { return 10 + i *14; } )
+              .style("font-size", "14px")
+              .style("color", "Black")
+              .style("font-family", "sans-serif")
+              .text(function (d) { return d; });
+    //d3.select("body").insert("", "").text(comment);
+
+    // Main chart axis
+    var x, y;
+//    bar_chart.setBounds(60, 30, 510, 330);
+    bar_chart.setBounds(60, 50, 550, 400);
+    // set chart axis limits as constant to avoid rescaling effect during animation
+    x = bar_chart.addTimeAxis("x", "Month_id", "%Y-%m", "%Y-%m");
+    x.title = "Month-Year"
+    //https://stackoverflow.com/questions/26562129/how-to-overridemin-max-for-time-axis-in-dimple
+    // https://github.com/d3/d3-time-format
+    var parseTime = d3.timeParse("%Y-%m");
+    x.overrideMax = parseTime("2004-12");
+    x.overrideMin = parseTime("2000-01");
+    y = bar_chart.addMeasureAxis("y", "0");
+    y.overrideMax = 145000.;
+    y.title = "Number of flight departures"
+
+    // draw main chart
+//    series = bar_chart.addSeries("Origin", dimple.plot.bar)
+    series = bar_chart.addSeries("Origin", dimple.plot.bar)
+    var myLegend = bar_chart.addLegend(600, 100, 100, 350, "Right");
+    bar_chart.draw();
+
+    // slider test
+    // credit to : http://bl.ocks.org/tomschulze/961d57bd1bbd2a9ef993f2e8645cb8d2
+    // credit to : https://bl.ocks.org/mbostock/6452972
+    //
+  //var slider = d3.select("#chartContainer").append("input")
+  //          .attr("type", "range")
+  //          .attr("style", "-webkit-appearance: slider-vertical" )
+  //          .attr("min", 0)
+  //          .attr("max", month_ids.length - 1)
+  //          .attr("value", 5)
+  //          .attr("id", "year")
+  //          .attr("x", 200);
+  //  console.log(slider)
+//
+
+//    var slider2 = dimple.newSvg("input").attr("x", 100)
+//    console.log(slider2)
+    //var slider = d3.select("body").select("input")
+    //var slider = document.getElementById("year");
+//    console.log(slider2.attr("min"))
+    //slider.attr("offsetLeft", 100);
+    //      .attr("offsetTop", 100)
+    //      .style("color", "red");
+
+
+//            .attr("-webkit-appearance","slider-vertical");
+//            .attr("x", 400)
+//            .attr("y", 300);
+
+
+//var up_to_month = d3.select("body").select("#chartContainer").select("#year").on("input", function() {
+  var up_to_month = d3.select("body")
+                    .select("#sliderContainer")
+                    .select("#year_svg")
+                    .on("input", function() {
+                      var up_to_month = month_ids[this.value]
+                      past_data = data.filter(function(d) {
+                        return d.Month_id < up_to_month;
+                      })
+                      bar_chart.data = dimple.filterData(past_data, "Origin", origins);
+                      bar_chart.draw(100);
+                      // update headline
+                      var test =d3.select("body")
+                      .select("#dateContainer")
+                      .select("current_month")
+
+                      d3.select("body")
+                      .select("#dateContainer")
+                      .select("current_month")
+                      .text("Current month" + month_ids[d3.select("#year-svg").node().value]);
+//                      d3.select("body")
+//                      .select("#chartContainer")
+//                      .select("h2")
+//                      .text(headline + month_ids[d3.select("#year-svg").node().value]);
+      return up_to_month
+    });
+
+
+    // interactive legend
+    // credit to http://dimplejs.org/advanced_examples_viewer.html?id=advanced_interactive_legends
+
+        // This is a critical step.  By doing this we orphan the legend. This
+        // means it will not respond to graph updates.  Without this the legend
+        // will redraw when the chart refreshes removing the unchecked item and
+        // also dropping the events we define below.
+        bar_chart.legends = [];
+
+        // This block simply adds the legend title. I put it into a d3 data
+        // object to split it onto 2 lines.  This technique works with any
+        // number of lines, it isn't dimple specific.
+        svg.selectAll("title_text")
+          .data(["Click legend to","show/hide airport:"])
+          .enter()
+          .append("text")
+            .attr("x", 600)
+            .attr("y", function (d, i) { return 70 + i * 14; })
+            .style("font-family", "sans-serif")
+            .style("font-size", "10px")
+            .style("color", "Black")
+            .text(function (d) { return d; });
+            // Get all the rectangles from our now orphaned legend
+        myLegend.shapes.selectAll("rect")
+          // Add a click event to each rectangle
+          .on("click", function (e) {
+            // This indicates whether the item is already visible or not
+            var hide = false;
+            var newFilters = [];
+            // If the filters contain the clicked shape hide it
+            origins.forEach(function (f) {
+              if (f === e.aggField.slice(-1)[0]) {
+                hide = true;
+              } else {
+                newFilters.push(f);
+              }
+            });
+            // Hide the shape or show it
+            if (hide) {
+              d3.select(this).style("opacity", 0.2);
+            } else {
+              newFilters.push(e.aggField.slice(-1)[0]);
+              d3.select(this).style("opacity", 0.8);
+            }
+            // Update the filters
+            origins = newFilters;
+              bar_chart.data = dimple.filterData(past_data, "Origin", origins);
+            // Passing a duration parameter makes the chart animate. Without
+            // it there is no transition
+            bar_chart.draw(800);
+          });
+          // Data source : http://stat-computing.org/dataexpo/2009/the-data.html
+  });
+  //<button id="btn">Click Me</button>
+    </script>
+</div>
+  </html>
