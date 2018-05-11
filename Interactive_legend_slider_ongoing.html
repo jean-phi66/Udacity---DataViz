@@ -19,12 +19,13 @@
   var date_svg = dimple.newSvg("#dateContainer", 100, 100);
   date_svg.append("text")
     .attr("id", "current_month")
-    .attr("x", 50)
-    .attr("y", 90)
+    .attr("x", 35)
+    .attr("y", 100)
     .style("text-anchor", "left")
     .style("font-family", "sans-serif")
     .style("font-size", 14)
     .attr("color", "black")
+    .style("font-weight", "bold")
     .text("2000-01")
 
 </script>
@@ -49,14 +50,14 @@
 </div>
 <div id="chartContainer">
   <script type="text/javascript">
-    var svg = dimple.newSvg("#chartContainer", 700, 500);
+    var svg = dimple.newSvg("#chartContainer", 700, 510);
 
     // title
-    var headline = "Impact of 9/11 on US Air traffic - Plot up to "
+    var headline = "Impact of 9/11 on US Air traffic"
     // add data source reference
     svg.append("text")
       .attr("x", 10)
-      .attr("y", 480)
+      .attr("y", 505)
       .style("text-anchor", "left")
       .style("font-family", "sans-serif")
       .style("font-size", 10)
@@ -76,7 +77,7 @@
     up_to_month = month_ids[0]
     var init_year = up_to_month
     // insert title and explanation
-    d3.select("body").insert("h2", ":first-child").text(headline + up_to_month);
+    d3.select("body").insert("h2", ":first-child").text(headline);
     var comment=["This graph displays the evolution of Air traffic (number of departures) for the 5 most important US airports.",
                 "since January 2001. One can see clearly a drop linked to the 9/11 attacks and the recovery that took place",
                 " during the two following years."]
@@ -110,9 +111,9 @@
 
     // draw main chart
 //    series = bar_chart.addSeries("Origin", dimple.plot.bar)
-    series = bar_chart.addSeries("Origin", dimple.plot.bar)
     var myLegend = bar_chart.addLegend(600, 100, 100, 350, "Right");
     bar_chart.draw();
+    series = bar_chart.addSeries("Origin", dimple.plot.bar)
 
     // slider test
     // credit to : http://bl.ocks.org/tomschulze/961d57bd1bbd2a9ef993f2e8645cb8d2
@@ -154,20 +155,31 @@
                         return d.Month_id < up_to_month;
                       })
                       bar_chart.data = dimple.filterData(past_data, "Origin", origins);
-                      bar_chart.draw(100);
                       // update headline
-                      var test =d3.select("body")
-                      .select("#dateContainer")
-                      .select("current_month")
+//                      var test =d3.select("body")
+//                      .select("#dateContainer")
+//                      .select("current_month")
 
-                      d3.select("body")
-                      .select("#dateContainer")
-                      .select("current_month")
-                      .text("Current month" + month_ids[d3.select("#year-svg").node().value]);
-//                      d3.select("body")
-//                      .select("#chartContainer")
-//                      .select("h2")
+                      console.log(up_to_month)
+//                      var text_month = d3.select("body")
+//                      .select("#dateContainer")
+//                      .select("#current_month")
+                      d3.select("#current_month")
+                      .text(up_to_month)
+//                      .enter()
+//                      .text("Current month" + month_ids[d3.select("#year-svg").node().value]);
+//                      .text("Current month" + up_to_month);
+//                      text_month.text = up_to_month
+//                      console.log(text_month);
+                      //d3.select("h2")
+                      //d3.select("body")
+                      //.select("#chartContainer")
+                      //.select("h2")
 //                      .text(headline + month_ids[d3.select("#year-svg").node().value]);
+                      //.text(headline + up_to_month);
+
+                      bar_chart.draw(100);
+
       return up_to_month
     });
 
